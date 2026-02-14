@@ -2,18 +2,21 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from model import classifier
+from services.db import get_models
 import logging
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 app = FastAPI(title="Image Classification API")
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=["http://localhost:5173"],  # React dev server
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,6 +25,11 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "Image Classification API is running"}
+
+@app.get("/models")
+async def models():
+    res = get_models()
+    return res
 
 @app.get("/health")
 async def health_check():
