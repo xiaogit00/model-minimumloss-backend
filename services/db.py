@@ -23,3 +23,42 @@ def get_models():
         return res.data
     except Exception as e: 
         print("There's an issue getting models from supabase: ", e)
+
+def delete_models():
+    try:
+        res = (
+            supabase.table('models')
+            .delete()
+            .neq("id", 0)
+            .execute()
+        )
+        if not res.data:
+            logging.info(f"No models found")
+            return None
+        logging.info(f'Deleted all models from models table.')
+        return res.data
+    except Exception as e: 
+        print("There's an issue getting models from supabase: ", e)
+
+def insert_model(modelData):
+    try:
+        newModel = {
+            "slug": modelData['slug'],
+            "name": modelData['name'],
+            "description": modelData['description'],
+            "dataset_description": modelData['dataset_description'],
+            "dataset_link": modelData['dataset_link'],
+            "training_code_link": modelData['training_code_link'],
+            "tags": modelData['tags']
+        }
+        logging.info(f"New model object: {newModel}")
+        res = (
+            supabase.table('models')
+            .insert(newModel)
+            .execute()
+        )
+        if res.data:
+            logging.info(f"Successfully inserted new model into models table.")
+        return res
+    except Exception as e: 
+        print("There's an issue updating supabase table: ", e)
