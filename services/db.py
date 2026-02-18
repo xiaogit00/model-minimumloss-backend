@@ -8,6 +8,37 @@ from datetime import datetime
 load_dotenv()
 supabase = get_supabase_client()
 
+def truncate_models():
+    try:
+    # Option 1: Using RPC (requires defining a custom function in Supabase SQL Editor)
+    # create or replace function truncate_models() returns void as $$
+    # begin
+    #   truncate table models restart identity;
+    # end;
+    # $$ language plpgsql;
+    
+        result = supabase.rpc("truncate_models").execute()
+        print("Table truncated successfully")
+    except Exception as e:
+        print(f"Error: {e}")
+
+def get_model(slug):
+    """Get all models"""
+    try:
+        res = (
+            supabase.table('models')
+            .select("*")
+            .eq('slug', slug)
+            .execute()
+        )
+        if not res.data:
+            logging.info(f"No models found")
+            return None
+        logging.info(f'Returning {res.data} from get_models function')
+        return res.data
+    except Exception as e: 
+        print("There's an issue getting models from supabase: ", e)
+
 def get_models():
     """Get all models"""
     try:
@@ -46,9 +77,12 @@ def insert_model(modelData):
             "slug": modelData['slug'],
             "name": modelData['name'],
             "description": modelData['description'],
+            "model_architecture": modelData['model_architecture'],
+            "reflections_url": modelData['reflections_url'],
             "dataset_description": modelData['dataset_description'],
-            "dataset_link": modelData['dataset_link'],
-            "training_code_link": modelData['training_code_link'],
+            "dataset_url": modelData['dataset_url'],
+            "training_code": modelData['training_code'],
+            "model_code": modelData['model_code'],
             "tags": modelData['tags']
         }
         logging.info(f"New model object: {newModel}")

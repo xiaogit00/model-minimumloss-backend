@@ -2,7 +2,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from model import classifier
-from services.db import get_models
+from services.db import get_models, get_model
 import logging
 
 
@@ -29,6 +29,11 @@ async def root():
 @app.get("/models")
 async def models():
     res = get_models()
+    return res
+
+@app.get("/models/{model_slug}")
+async def model(model_slug):
+    res = get_model(model_slug)
     return res
 
 @app.get("/health")
