@@ -1,0 +1,5 @@
+{
+    "model_name": "Sample Model Name",
+    "blog_link": "https://sampleBloglink.com",
+    "tags": ["cnn", "mnist"]
+}
