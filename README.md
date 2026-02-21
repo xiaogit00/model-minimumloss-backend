@@ -27,3 +27,6 @@ Each `model` folder **expects** the following files, which will be rendered in t
 Each of these are rendered in different pages on the frontend. 
 
 Since these files are required for each model, the model generation code generates these for each model. 
+
+### Using trained models for inference
+The idea ultimately is to be able to serve the models themselves and use them for inference. Each model will be exported into the `models/modelSlug/exports` folder, and be exposed as a route for the frontend to be able to use it for inference. 
