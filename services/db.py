@@ -1,59 +1,160 @@
-import os
-from services.supabase_client import get_supabase_client
-from dotenv import load_dotenv
+from fastapi import HTTPException
 import logging
-from typing import Optional
-from datetime import datetime
+from pathlib import Path
 
-load_dotenv()
-supabase = get_supabase_client()
 
-def truncate_models():
+def get_models() -> list:
+    """
+    Gets all the filenames in folders path and returns them in a list of tuples
+
+    :return: Description
+    :rtype: list of tuples
+
+    Example: [('1', 'MNISTFashion', 'shallowNN', '18FEB26'), ('2', 'MNISTFashion', 'deepNN', '21FEB26')]
+    """
+    BASE_CODE_DIR = Path(__file__).parent.parent
+    models_dir = BASE_CODE_DIR / "models"
+    folderNames = [x.name for x in models_dir.iterdir() if x.is_dir()]
+    models = [folderName.split('_') for folderName in folderNames]
+    for i, name in enumerate(folderNames):
+        models[i].append(name)
+    return models
+
+def get_model_definition(model_slug) -> str:
+    """
+    Gets the model definition python file and return as text
+
+    :return: Model Definition Python code
+    :rtype: str
+
+    """
+    BASE_CODE_DIR = Path(__file__).parent.parent
+    model_dir = BASE_CODE_DIR / "models" / str(model_slug)
     try:
-    # Option 1: Using RPC (requires defining a custom function in Supabase SQL Editor)
-    # create or replace function truncate_models() returns void as $$
-    # begin
-    #   truncate table models restart identity;
-    # end;
-    # $$ language plpgsql;
-    
-        result = supabase.rpc("truncate_models").execute()
-        print("Table truncated successfully")
+        # Join the base directory with requested path
+        model_definition_file_path = (model_dir / 'MODEL_DEFINITION.py').resolve()
+        
+        # Verify the resolved path is still within the base directory
+        if not str(model_definition_file_path).startswith(str(model_dir.resolve())):
+            raise HTTPException(status_code=400, detail="Invalid file path")
+        
+        # Check if file exists and is a file
+        if not model_definition_file_path.exists() or not model_definition_file_path.is_file():
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Read and return the file content
+        with open(model_definition_file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        print("This is reached")
+        return content
+        
     except Exception as e:
-        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    
+def get_model_dataset(model_slug) -> str:
+    """
+    Gets the model dataset MD file
 
-def get_model(slug):
-    """Get all models"""
-    try:
-        res = (
-            supabase.table('models')
-            .select("*")
-            .eq('slug', slug)
-            .execute()
-        )
-        if not res.data:
-            logging.info(f"No models found")
-            return None
-        logging.info(f'Returning {res.data} from get_models function')
-        return res.data
-    except Exception as e: 
-        print("There's an issue getting models from supabase: ", e)
+    :return: Model dataset MD file
+    :rtype: str
 
-def get_models():
-    """Get all models"""
+    """
+    BASE_CODE_DIR = Path(__file__).parent.parent
+    model_dir = BASE_CODE_DIR / "models" / str(model_slug)
     try:
-        res = (
-            supabase.table('models')
-            .select("*")
-            .execute()
-        )
-        if not res.data:
-            logging.info(f"No models found")
-            return None
-        logging.info(f'Returning {res.data} from get_models function')
-        return res.data
-    except Exception as e: 
-        print("There's an issue getting models from supabase: ", e)
+        # Join the base directory with requested path
+        model_definition_file_path = (model_dir / 'DATASET.md').resolve()
+        
+        # Verify the resolved path is still within the base directory
+        if not str(model_definition_file_path).startswith(str(model_dir.resolve())):
+            raise HTTPException(status_code=400, detail="Invalid file path")
+        
+        # Check if file exists and is a file
+        if not model_definition_file_path.exists() or not model_definition_file_path.is_file():
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Read and return the file content
+        with open(model_definition_file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return content
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+def get_model_training_code(model_slug) -> str:
+    """
+    Gets the model dataset MD file
+
+    :return: Model dataset MD file
+    :rtype: str
+
+    """
+    BASE_CODE_DIR = Path(__file__).parent.parent
+    model_dir = BASE_CODE_DIR / "models" / str(model_slug)
+    try:
+        # Join the base directory with requested path
+        training_code_file_path = (model_dir / 'TRAINING_CODE.py').resolve()
+        
+        # Verify the resolved path is still within the base directory
+        if not str(training_code_file_path).startswith(str(model_dir.resolve())):
+            raise HTTPException(status_code=400, detail="Invalid file path")
+        
+        # Check if file exists and is a file
+        if not training_code_file_path.exists() or not training_code_file_path.is_file():
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Read and return the file content
+        with open(training_code_file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return content
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+def get_model_eval_results(model_slug) -> str:
+    """
+    Gets the model dataset MD file
+
+    :return: Model dataset MD file
+    :rtype: str
+
+    """
+    BASE_CODE_DIR = Path(__file__).parent.parent
+    model_dir = BASE_CODE_DIR / "models" / str(model_slug)
+    try:
+        # Join the base directory with requested path
+        training_code_file_path = (model_dir / 'EVAL_RESULTS.log').resolve()
+        
+        # Verify the resolved path is still within the base directory
+        if not str(training_code_file_path).startswith(str(model_dir.resolve())):
+            raise HTTPException(status_code=400, detail="Invalid file path")
+        
+        # Check if file exists and is a file
+        if not training_code_file_path.exists() or not training_code_file_path.is_file():
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Read and return the file content
+        with open(training_code_file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return content
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+# def get_models():
+#     """Get all models"""
+#     try:
+#         res = (
+#             supabase.table('models')
+#             .select("*")
+#             .execute()
+#         )
+#         if not res.data:
+#             logging.info(f"No models found")
+#             return None
+#         logging.info(f'Returning {res.data} from get_models function')
+#         return res.data
+#     except Exception as e: 
+#         print("There's an issue getting models from supabase: ", e)
 
 def delete_models():
     try:

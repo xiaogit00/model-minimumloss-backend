@@ -2,9 +2,10 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from model import classifier
-from services.db import get_models, get_model
+import services.db as db
 import logging
-
+from pathlib import Path
+BASE_CODE_DIR = Path("./models/mnist_fashion")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -16,7 +17,7 @@ app = FastAPI(title="Image Classification API")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # React dev server
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # React dev server
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,13 +29,29 @@ async def root():
 
 @app.get("/models")
 async def models():
-    res = get_models()
+    res = db.get_models()
     return res
 
-@app.get("/models/{model_slug}")
+@app.get("/models/{model_slug}/definition")
 async def model(model_slug):
-    res = get_model(model_slug)
+    res = db.get_model_definition(model_slug)
     return res
+
+@app.get("/models/{model_slug}/dataset")
+async def model(model_slug):
+    res = db.get_model_dataset(model_slug)
+    return res
+
+@app.get("/models/{model_slug}/training-code")
+async def model(model_slug):
+    res = db.get_model_training_code(model_slug)
+    return res
+
+@app.get("/models/{model_slug}/eval-results")
+async def model(model_slug):
+    res = db.get_model_eval_results(model_slug)
+    return res
+
 
 @app.get("/health")
 async def health_check():
