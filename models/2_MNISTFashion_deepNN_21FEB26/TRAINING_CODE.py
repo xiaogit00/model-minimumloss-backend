@@ -15,7 +15,7 @@ from utils.logging_config import setup_logger
 logger = setup_logger(filename_without_ext)
 # %%
 training_data = datasets.FashionMNIST(
-    root='../data', # Downloads into folder called data in the same directory
+    root='../../data', # Downloads into folder called data in the same directory
     train=True, # Creates dataset from train-images-idx3-ubyte, otherwise from the t10k one. On first download, downloads both train and t10k (test) images
     download=True, # Will download if doesn't exist
     transform=ToTensor()
@@ -23,7 +23,7 @@ training_data = datasets.FashionMNIST(
 # %%
 
 test_data = datasets.FashionMNIST(
-    root='../data', # Downloads into folder called data in the parent same directory
+    root='../../data', # Downloads into folder called data in the parent same directory
     train=False, # Creates dataset from train-images-idx3-ubyte, otherwise from the t10k one. On first download, downloads both train and t10k (test) images
     transform=ToTensor()
 )
