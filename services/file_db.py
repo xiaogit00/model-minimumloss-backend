@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 import logging
 from pathlib import Path
+import json
 
 
 def get_models() -> list:
@@ -8,7 +9,7 @@ def get_models() -> list:
     Gets all the filenames in folders path and returns them in a list of tuples
 
     :return: Description
-    :rtype: list of tuples
+    :rtype: list of lists
 
     Example: [('1', 'MNISTFashion', 'shallowNN', '18FEB26'), ('2', 'MNISTFashion', 'deepNN', '21FEB26')]
     """
@@ -16,8 +17,17 @@ def get_models() -> list:
     models_dir = BASE_CODE_DIR / "models"
     folderNames = [x.name for x in models_dir.iterdir() if x.is_dir()]
     models = [folderName.split('_') for folderName in folderNames]
+    
     for i, name in enumerate(folderNames):
+        #folderName would be the folder; I want the metadata.json within the folder
+        metadata_file_path = (models_dir / name / 'metadata.json').resolve()
+        with open(metadata_file_path, 'r') as file:
+        # Use json.load() to parse the file content into a Python dictionary
+            metadata = json.load(file)
+            models[i].append(metadata['blog_link'])
+            models[i].append(metadata['tags'])
         models[i].append(name)
+    print(models)
     return models
 
 def get_model_definition(model_slug) -> str:
@@ -140,60 +150,4 @@ def get_model_eval_results(model_slug) -> str:
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-# def get_models():
-#     """Get all models"""
-#     try:
-#         res = (
-#             supabase.table('models')
-#             .select("*")
-#             .execute()
-#         )
-#         if not res.data:
-#             logging.info(f"No models found")
-#             return None
-#         logging.info(f'Returning {res.data} from get_models function')
-#         return res.data
-#     except Exception as e: 
-#         print("There's an issue getting models from supabase: ", e)
 
-def delete_models():
-    try:
-        res = (
-            supabase.table('models')
-            .delete()
-            .neq("id", 0)
-            .execute()
-        )
-        if not res.data:
-            logging.info(f"No models found")
-            return None
-        logging.info(f'Deleted all models from models table.')
-        return res.data
-    except Exception as e: 
-        print("There's an issue getting models from supabase: ", e)
-
-def insert_model(modelData):
-    try:
-        newModel = {
-            "slug": modelData['slug'],
-            "name": modelData['name'],
-            "description": modelData['description'],
-            "model_architecture": modelData['model_architecture'],
-            "reflections_url": modelData['reflections_url'],
-            "dataset_description": modelData['dataset_description'],
-            "dataset_url": modelData['dataset_url'],
-            "training_code": modelData['training_code'],
-            "model_code": modelData['model_code'],
-            "tags": modelData['tags']
-        }
-        logging.info(f"New model object: {newModel}")
-        res = (
-            supabase.table('models')
-            .insert(newModel)
-            .execute()
-        )
-        if res.data:
-            logging.info(f"Successfully inserted new model into models table.")
-        return res
-    except Exception as e: 
-        print("There's an issue updating supabase table: ", e)

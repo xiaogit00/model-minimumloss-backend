@@ -1,10 +1,10 @@
-from services import db
+from services import file_db
 import unittest
 import asyncio
 from pathlib import Path
 class TestDB(unittest.TestCase):
     def test_get_models(self):
-        res = db.get_models()
+        res = file_db.get_models()
         print(res)
     # def test_delete_models(self):
     #     # res1 = db.truncate_models()

@@ -2,7 +2,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from model import classifier
-import services.db as db
+import services.file_db as file_db
 import logging
 from pathlib import Path
 BASE_CODE_DIR = Path("./models/mnist_fashion")
@@ -29,27 +29,27 @@ async def root():
 
 @app.get("/models")
 async def models():
-    res = db.get_models()
+    res = file_db.get_models()
     return res
 
 @app.get("/models/{model_slug}/definition")
 async def model(model_slug):
-    res = db.get_model_definition(model_slug)
+    res = file_db.get_model_definition(model_slug)
     return res
 
 @app.get("/models/{model_slug}/dataset")
 async def model(model_slug):
-    res = db.get_model_dataset(model_slug)
+    res = file_db.get_model_dataset(model_slug)
     return res
 
 @app.get("/models/{model_slug}/training-code")
 async def model(model_slug):
-    res = db.get_model_training_code(model_slug)
+    res = file_db.get_model_training_code(model_slug)
     return res
 
 @app.get("/models/{model_slug}/eval-results")
 async def model(model_slug):
-    res = db.get_model_eval_results(model_slug)
+    res = file_db.get_model_eval_results(model_slug)
     return res
 
 
