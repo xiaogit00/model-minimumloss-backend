@@ -19,7 +19,6 @@ def get_models() -> list:
     models = [folderName.split('_') for folderName in folderNames]
     
     for i, name in enumerate(folderNames):
-        #folderName would be the folder; I want the metadata.json within the folder
         metadata_file_path = (models_dir / name / 'metadata.json').resolve()
         with open(metadata_file_path, 'r') as file:
         # Use json.load() to parse the file content into a Python dictionary
@@ -27,7 +26,6 @@ def get_models() -> list:
             models[i].append(metadata['blog_link'])
             models[i].append(metadata['tags'])
         models[i].append(name)
-    print(models)
     return models
 
 def get_model_definition(model_slug) -> str:
