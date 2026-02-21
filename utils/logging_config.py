@@ -4,7 +4,6 @@ from datetime import datetime
 
 
 def setup_logger(name="training", log_dir="logs"):
-    log_dir = os.path.join(log_dir, name)
     os.makedirs(log_dir, exist_ok=True)
 
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
