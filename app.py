@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from model import classifier
@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 app = FastAPI(title="Image Classification API")
+router = APIRouter()
 
 # Configure CORS
 app.add_middleware(
@@ -23,50 +24,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
+@router.get("/")
 async def root():
     return {"message": "Image Classification API is running"}
 
-@app.get("/models")
+@router.get("/models")
 async def models():
     res = file_db.get_models()
     return res
 
-@app.get("/models/{model_slug}/definition")
+@router.get("/models/{model_slug}/definition")
 async def model(model_slug):
     res = file_db.get_model_definition(model_slug)
     return res
 
-@app.get("/models/{model_slug}/dataset")
+@router.get("/models/{model_slug}/dataset")
 async def model(model_slug):
     res = file_db.get_model_dataset(model_slug)
     return res
 
-@app.get("/models/{model_slug}/training-code")
+@router.get("/models/{model_slug}/training-code")
 async def model(model_slug):
     res = file_db.get_model_training_code(model_slug)
     return res
 
-@app.get("/models/{model_slug}/eval-results")
+@router.get("/models/{model_slug}/eval-results")
 async def model(model_slug):
     res = file_db.get_model_eval_results(model_slug)
     return res
 
-@app.get("/models/{model_slug}/loss-chart")
+@router.get("/models/{model_slug}/loss-chart")
 async def model(model_slug):
     res = file_db.get_model_loss_chart(model_slug)
     return res
 
-@app.get("/models/{model_slug}/errors-chart")
+@router.get("/models/{model_slug}/errors-chart")
 async def model(model_slug):
     res = file_db.get_model_errors_chart(model_slug)
     return res
 
-@app.get("/health")
+@router.get("/health")
 async def health_check():
     return {"status": "healthy"}
 
-@app.post("/predict")
+@router.post("/predict")
 async def predict(file: UploadFile = File(...)):
     """
     Upload an image and get classification predictions
@@ -94,7 +95,7 @@ async def predict(file: UploadFile = File(...)):
         logger.error(f"Error classifying image: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/predict-batch")
+@router.post("/predict-batch")
 async def predict_batch(files: list[UploadFile] = File(...)):
     """
     Upload multiple images and get classifications
@@ -119,6 +120,7 @@ async def predict_batch(files: list[UploadFile] = File(...)):
         logger.error(f"Error in batch classification: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+app.include_router(router, prefix="/api")
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
