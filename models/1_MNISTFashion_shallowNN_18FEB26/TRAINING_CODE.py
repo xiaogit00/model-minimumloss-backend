@@ -6,6 +6,9 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor
 import sys
 from pathlib import Path
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+plt.style.use('seaborn-v0_8')
 
 PROJECT_ROOT = Path().resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT))
@@ -54,10 +57,15 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 predictor = ShallowNetwork().to(device)
 loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(predictor.parameters(), lr=1e-3)
+train_loss_per_epoch = []
+test_loss_per_epoch = []
+train_error_percentage_per_epoch = []
+test_error_percentage_per_epoch = []
 #%%
 def train(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
     model.train()
+    train_correct = 0
     for batch, (X, y) in enumerate(dataloader):
         
         X, y = X.to(device), y.to(device)
@@ -65,6 +73,7 @@ def train(dataloader, model, loss_fn, optimizer):
         # Compute prediction error
         pred = model(X)
         loss = loss_fn(pred, y)
+        train_correct += (pred.argmax(1) == y).type(torch.float).sum().item()
         # Backpropagation
         optimizer.zero_grad()
         loss.backward()
@@ -73,6 +82,12 @@ def train(dataloader, model, loss_fn, optimizer):
         if batch % 100 == 0:
             loss, current = loss.item(), (batch + 1) * len(X)
             logger.info(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+        if batch == len(dataloader) - 1:
+            print(f"batch: {batch}, appending train loss: {loss.item()}")
+            train_loss_per_epoch.append(loss.item())
+            train_correct /= len(dataloader.dataset)
+            train_error_percentage_per_epoch.append(1 - train_correct)
+            
 # %%
 def test(dataloader, model, loss_fn):
     size = len(dataloader.dataset)
@@ -88,6 +103,8 @@ def test(dataloader, model, loss_fn):
     test_loss /= num_batches
     correct /= size
     logger.info(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+    test_loss_per_epoch.append(test_loss)
+    test_error_percentage_per_epoch.append(1 - correct)
 
 # %%
 epochs = 20
@@ -97,3 +114,20 @@ for t in range(epochs):
     test(test_dataloader, predictor, loss_fn)
 logger.info("Done!")
 # %%
+x = list(range(1, epochs+1))
+plt.title("Loss per epoch")
+plt.xlabel("Epoch")
+plt.ylabel("Loss values")
+plt.plot(x, train_loss_per_epoch, label='Train Loss', marker='o', linestyle='--')
+plt.plot(x, test_loss_per_epoch, label='Test Loss',marker='s',color="tomato", linestyle='--')
+plt.legend()
+plt.show()
+# %%
+x = list(range(1, epochs+1))
+plt.title("Errors % per epoch")
+plt.xlabel("Epoch")
+plt.ylabel("Errors %")
+plt.plot(x, train_error_percentage_per_epoch, label='Train Errors', marker='o', linestyle='--')
+plt.plot(x, test_error_percentage_per_epoch, label='Test Errors',marker='s',color="tomato", linestyle='--')
+plt.legend()
+plt.show()

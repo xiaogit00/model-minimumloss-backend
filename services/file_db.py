@@ -1,4 +1,6 @@
 from fastapi import HTTPException
+from fastapi.responses import FileResponse
+from fastapi.responses import PlainTextResponse
 import logging
 from pathlib import Path
 import json
@@ -16,8 +18,8 @@ def get_models() -> list:
     BASE_CODE_DIR = Path(__file__).parent.parent
     models_dir = BASE_CODE_DIR / "models"
     folderNames = [x.name for x in models_dir.iterdir() if x.is_dir()]
+    folderNames.sort()
     models = [folderName.split('_') for folderName in folderNames]
-    
     for i, name in enumerate(folderNames):
         metadata_file_path = (models_dir / name / 'metadata.json').resolve()
         with open(metadata_file_path, 'r') as file:
@@ -144,7 +146,62 @@ def get_model_eval_results(model_slug) -> str:
         # Read and return the file content
         with open(training_code_file_path, 'r', encoding='utf-8') as f:
             content = f.read()
-        return content
+        return PlainTextResponse(content)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+def get_model_loss_chart(model_slug):
+    """
+    Gets model loss chart in png
+
+    :return: Model dataset MD file
+    :rtype: png file
+
+    """
+    BASE_CODE_DIR = Path(__file__).parent.parent
+    model_dir = BASE_CODE_DIR / "models" / str(model_slug)
+    try:
+        # Join the base directory with requested path
+        loss_chart_file_path = (model_dir / 'LOSS_CHART.png').resolve()
+        
+        # Verify the resolved path is still within the base directory
+        if not str(loss_chart_file_path).startswith(str(model_dir.resolve())):
+            raise HTTPException(status_code=400, detail="Invalid file path")
+        
+        # Check if file exists and is a file
+        if not loss_chart_file_path.exists() or not loss_chart_file_path.is_file():
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        return FileResponse(loss_chart_file_path, media_type="image/png", filename="image_from_api.png")
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+def get_model_errors_chart(model_slug):
+    """
+    Gets model loss chart in png
+
+    :return: Model dataset MD file
+    :rtype: png file
+
+    """
+    BASE_CODE_DIR = Path(__file__).parent.parent
+    model_dir = BASE_CODE_DIR / "models" / str(model_slug)
+    try:
+        # Join the base directory with requested path
+        errors_chart_file_path = (model_dir / 'ERRORS_CHART.png').resolve()
+        
+        # Verify the resolved path is still within the base directory
+        if not str(errors_chart_file_path).startswith(str(model_dir.resolve())):
+            raise HTTPException(status_code=400, detail="Invalid file path")
+        
+        # Check if file exists and is a file
+        if not errors_chart_file_path.exists() or not errors_chart_file_path.is_file():
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        return FileResponse(errors_chart_file_path, media_type="image/png", filename="image_from_api.png")
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

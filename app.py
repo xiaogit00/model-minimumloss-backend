@@ -52,6 +52,15 @@ async def model(model_slug):
     res = file_db.get_model_eval_results(model_slug)
     return res
 
+@app.get("/models/{model_slug}/loss-chart")
+async def model(model_slug):
+    res = file_db.get_model_loss_chart(model_slug)
+    return res
+
+@app.get("/models/{model_slug}/errors-chart")
+async def model(model_slug):
+    res = file_db.get_model_errors_chart(model_slug)
+    return res
 
 @app.get("/health")
 async def health_check():
