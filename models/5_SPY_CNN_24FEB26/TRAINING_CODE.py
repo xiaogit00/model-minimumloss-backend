@@ -136,7 +136,7 @@ class StockCNN(nn.Module):
 
 # %% ############## DATASET PREPARATION ################
 
-data = pd.read_csv('../../data/finance_timeseries/SPY_15y.csv', header=0, skiprows=[1,2], index_col=0, parse_dates=True)
+data = pd.read_csv('../../finance_timeseries/SPY_15y.csv', header=0, skiprows=[1,2], index_col=0, parse_dates=True)
 
 features = data[['Open', 'High', 'Low', 'Close', 'Volume']].pct_change()
 target = ((data['Close'] - data['Close'].shift()) > 0).astype(int)
