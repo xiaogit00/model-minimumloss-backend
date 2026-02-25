@@ -9,9 +9,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 import random
-import os
+import os, sys
 from tqdm import tqdm
+from pathlib import Path
 from torch.optim.lr_scheduler import StepLR
+PROJECT_ROOT = Path().resolve().parent.parent
+sys.path.append(str(PROJECT_ROOT))
+filename_without_ext = Path(__file__).stem
+from utils.logging_config import setup_logger
+
+logger = setup_logger(filename_without_ext)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -62,6 +69,20 @@ def train_model_with_scheduler(model, lr, train_loader, test_loader, num_epochs=
     train_accs, test_accs = [], []
 
     for epoch in tqdm(range(num_epochs)):
+        if epoch == 0:
+            logger.info("MODEL ARCHITECTURE")
+            logger.info(model)
+            logger.info('\n-------------------\n')
+            logger.info("INITIAL MODEL WEIGHTS")
+            logger.info(f"First Conv1D Weights: {model.layer1[0].weight.shape}:\n {model.layer1[0].weight}")
+            logger.info('\n-------------------\n')
+            logger.info(f"Second Conv1D Weights: {model.layer2[0].weight.shape}:\n {model.layer2[0].weight}")
+            logger.info('\n-------------------\n')
+            logger.info(f"Hidden Layer 3 (Linear) Weights: {model.fc[0].weight.shape}:\n {model.fc[0].weight}")
+            logger.info('\n-------------------\n')
+            logger.info(f"Output layer Weights: {model.fc[3].weight.shape}:\n {model.fc[3].weight}")
+            logger.info('\n-------------------\n')
+        
         model.train()
         run_loss, correct, total = 0.0, 0, 0
         for x, y in train_loader:
@@ -80,6 +101,16 @@ def train_model_with_scheduler(model, lr, train_loader, test_loader, num_epochs=
         train_losses.append(run_loss/len(train_loader))
         train_accs.append(correct/total)
         scheduler.step()
+        if epoch == num_epochs-1:
+            logger.info("FINAL MODEL WEIGHTS")
+            logger.info(f"First Conv1D Weights: {model.layer1[0].weight.shape}:\n {model.layer1[0].weight}")
+            logger.info('\n-------------------\n')
+            logger.info(f"Second Conv1D Weights: {model.layer2[0].weight.shape}:\n {model.layer2[0].weight}")
+            logger.info('\n-------------------\n')
+            logger.info(f"Hidden Layer 3 (Linear) Weights: {model.fc[0].weight.shape}:\n {model.fc[0].weight}")
+            logger.info('\n-------------------\n')
+            logger.info(f"Output layer Weights: {model.fc[3].weight.shape}:\n {model.fc[3].weight}")
+            logger.info('\n-------------------\n')
 
         model.eval()
         test_loss, correct, total = 0.0, 0, 0
@@ -171,6 +202,8 @@ L_out = L((L(60, k))//2, k)//2
 
 # %% ############## MODEL TRAINING ################
 model_sched = StockCNN(8*L_out, k)
+
+#%%
 t_loss, v_loss, t_acc, v_acc = train_model_with_scheduler(model_sched, 1e-3, train_loader_long_change, test_loader_long_change)
 plot_results(t_loss, v_loss, t_acc, v_acc, title=f"Raw Prices for {k} kernel size")
 # %%
