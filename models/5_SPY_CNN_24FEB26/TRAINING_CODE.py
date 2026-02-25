@@ -151,6 +151,8 @@ seq_len_long = 60
 scaler = StandardScaler()
 features_change = scaler.fit_transform(features_change)
 
+train_size = int(len(features_change) * 0.8)
+
 # Re-instantiate datasets with new sequence length
 train_dataset_long_change = TimeSeriesDataset(features_change[:train_size], target[:train_size], seq_len_long)
 test_dataset_long_change = TimeSeriesDataset(features_change[train_size:], target[train_size:], seq_len_long)
