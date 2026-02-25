@@ -97,6 +97,7 @@ def train_model_with_scheduler(model, lr, train_loader, test_loader, num_epochs=
 
     return train_losses, test_losses, train_accs, test_accs
 
+# Complete the StockCNN class by filling in the blanks; (Do Not Modify Others)
 class StockCNN(nn.Module):
     def __init__(self, input_dim=40, kernel_size=3):
         super(StockCNN, self).__init__()
@@ -130,32 +131,41 @@ class StockCNN(nn.Module):
         # print("flatten out size:", out.size())
         return self.fc(out)
 
-# %%
-
 data = pd.read_csv('../../data/finance_timeseries/SPY_15y.csv', header=0, skiprows=[1,2], index_col=0, parse_dates=True)
-
 # %%
 # --- EXPERIMENT B: RETURN DATA ---
 
-features = data[['Open', 'High', 'Low', 'Close', 'Volume']].pct_change()
+# features = data[['Open', 'High', 'Low', 'Close', 'Volume']].pct_change()
+# target = ((data['Close'] - data['Close'].shift()) > 0).astype(int)
+
+# # Drop NAs created by pct_change (Do Not Modify)
+# combined = pd.concat([features, target], axis=1).dropna()
+# features_change = combined.iloc[:, :-1].values
+# target_change = combined.iloc[:, -1].values
+
+# # Scaling
+# # < Complete the code here >
+# scaler = StandardScaler()
+# features_change = scaler.fit_transform(features_change)
+
+# # Split 80/20
+# # < Complete the code here >
+# train_size = int(len(features_change) * 0.8)
+# seq_len = 20
+# train_dataset = TimeSeriesDataset(features_change[:train_size], target_change[:train_size], seq_len)
+# test_dataset = TimeSeriesDataset(features_change[train_size:], target_change[train_size:], seq_len)
+
+features_raw = data[['Open', 'High', 'Low', 'Close', 'Volume']]
 target = ((data['Close'] - data['Close'].shift()) > 0).astype(int)
 
-# Drop NAs created by pct_change (Do Not Modify)
-combined = pd.concat([features, target], axis=1).dropna()
-features_change = combined.iloc[:, :-1].values
-target_change = combined.iloc[:, -1].values
-
-# Scaling
-# < Complete the code here >
+# Scaling (Do Not Modify)
 scaler = StandardScaler()
-features_change = scaler.fit_transform(features_change)
+features_raw = scaler.fit_transform(features_raw)
 
-# Split 80/20
-# < Complete the code here >
-train_size = int(len(features_change) * 0.8)
-train_dataset = TimeSeriesDataset(features_change[:train_size], target_change[:train_size])
-test_dataset = TimeSeriesDataset(features_change[train_size:], target_change[train_size:])
-
+# Split (80/20, Do Not Modify)
+train_size = int(len(features_raw) * 0.8)
+train_dataset = TimeSeriesDataset(features_raw[:train_size], target[:train_size])
+test_dataset = TimeSeriesDataset(features_raw[train_size:], target[train_size:])
 # Create Dataloader
 set_seed(42) # Reset seed for fair comparison
 # < Complete the code here >
@@ -165,7 +175,13 @@ test_loader_raw = DataLoader(test_dataset, batch_size=32, shuffle=False)
 # Train the model and plot the results
 set_seed(42) # Reset seed for fair comparison
 # < Complete the code here >
+# def L(L_in, K):
+#     return (L_in + 2 - (K-1) - 1)+1
+# k=5
+
+# L_out = L((L(seq_len, k))//2, k)//2
+
 model_raw = StockCNN()
-t_loss, v_loss, t_acc, v_acc = train_model_with_scheduler(model_raw, 1e-3, train_loader_raw, test_loader_raw)
+t_loss, v_loss, t_acc, v_acc = train_model_with_scheduler(model_raw, 1e-5, train_loader_raw, test_loader_raw)
 plot_results(t_loss, v_loss, t_acc, v_acc, title="Raw Prices")
 # %%
