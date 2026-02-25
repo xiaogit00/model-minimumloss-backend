@@ -1,4 +1,4 @@
-# %%
+# %% ############## Imports and definitions ################
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -57,7 +57,7 @@ def train_model_with_scheduler(model, lr, train_loader, test_loader, num_epochs=
     model = model.to(device)
     criterion = nn.BCELoss()
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    # scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
+    scheduler = StepLR(optimizer, step_size=10, gamma=0.1)
     train_losses, test_losses = [], []
     train_accs, test_accs = [], []
 
@@ -72,13 +72,14 @@ def train_model_with_scheduler(model, lr, train_loader, test_loader, num_epochs=
             loss = criterion(out, y)
             loss.backward()
             optimizer.step()
+            
             run_loss += loss.item()
             preds = (out > 0.5).float()
             correct += (preds == y).sum().item()
             total += y.size(0)
         train_losses.append(run_loss/len(train_loader))
         train_accs.append(correct/total)
-        # scheduler.step()
+        scheduler.step()
 
         model.eval()
         test_loss, correct, total = 0.0, 0, 0
@@ -96,6 +97,8 @@ def train_model_with_scheduler(model, lr, train_loader, test_loader, num_epochs=
         test_accs.append(correct/total)
 
     return train_losses, test_losses, train_accs, test_accs
+
+# %% ############## MODEL DEFINITION ################
 
 # Complete the StockCNN class by filling in the blanks; (Do Not Modify Others)
 class StockCNN(nn.Module):
@@ -131,57 +134,41 @@ class StockCNN(nn.Module):
         # print("flatten out size:", out.size())
         return self.fc(out)
 
+# %% ############## DATASET PREPARATION ################
+
 data = pd.read_csv('../../data/finance_timeseries/SPY_15y.csv', header=0, skiprows=[1,2], index_col=0, parse_dates=True)
-# %%
-# --- EXPERIMENT B: RETURN DATA ---
 
-# features = data[['Open', 'High', 'Low', 'Close', 'Volume']].pct_change()
-# target = ((data['Close'] - data['Close'].shift()) > 0).astype(int)
-
-# # Drop NAs created by pct_change (Do Not Modify)
-# combined = pd.concat([features, target], axis=1).dropna()
-# features_change = combined.iloc[:, :-1].values
-# target_change = combined.iloc[:, -1].values
-
-# # Scaling
-# # < Complete the code here >
-# scaler = StandardScaler()
-# features_change = scaler.fit_transform(features_change)
-
-# # Split 80/20
-# # < Complete the code here >
-# train_size = int(len(features_change) * 0.8)
-# seq_len = 20
-# train_dataset = TimeSeriesDataset(features_change[:train_size], target_change[:train_size], seq_len)
-# test_dataset = TimeSeriesDataset(features_change[train_size:], target_change[train_size:], seq_len)
-
-features_raw = data[['Open', 'High', 'Low', 'Close', 'Volume']]
+features = data[['Open', 'High', 'Low', 'Close', 'Volume']].pct_change()
 target = ((data['Close'] - data['Close'].shift()) > 0).astype(int)
 
-# Scaling (Do Not Modify)
-scaler = StandardScaler()
-features_raw = scaler.fit_transform(features_raw)
-
-# Split (80/20, Do Not Modify)
-train_size = int(len(features_raw) * 0.8)
-train_dataset = TimeSeriesDataset(features_raw[:train_size], target[:train_size])
-test_dataset = TimeSeriesDataset(features_raw[train_size:], target[train_size:])
-# Create Dataloader
-set_seed(42) # Reset seed for fair comparison
+# Drop NAs created by pct_change (Do Not Modify)
+combined = pd.concat([features, target], axis=1).dropna()
+features_change = combined.iloc[:, :-1].values
+target_change = combined.iloc[:, -1].values
+seq_len_long = 60
+# Scaling
 # < Complete the code here >
-train_loader_raw = DataLoader(train_dataset, batch_size=32, shuffle=True)
-test_loader_raw = DataLoader(test_dataset, batch_size=32, shuffle=False)
+scaler = StandardScaler()
+features_change = scaler.fit_transform(features_change)
+
+# Re-instantiate datasets with new sequence length
+train_dataset_long_change = TimeSeriesDataset(features_change[:train_size], target[:train_size], seq_len_long)
+test_dataset_long_change = TimeSeriesDataset(features_change[train_size:], target[train_size:], seq_len_long)
+
+# Create Loaders
+set_seed(42)
+train_loader_long_change = DataLoader(train_dataset_long_change, batch_size=32, shuffle=True)
+test_loader_long_change = DataLoader(test_dataset_long_change, batch_size=32, shuffle=False)
 
 # Train the model and plot the results
-set_seed(42) # Reset seed for fair comparison
-# < Complete the code here >
-# def L(L_in, K):
-#     return (L_in + 2 - (K-1) - 1)+1
-# k=5
+def L(L_in, K):
+    return (L_in + 2 - (K-1) - 1)+1
+set_seed(42)
+k = 5
+L_out = L((L(60, k))//2, k)//2
 
-# L_out = L((L(seq_len, k))//2, k)//2
-
-model_raw = StockCNN()
-t_loss, v_loss, t_acc, v_acc = train_model_with_scheduler(model_raw, 1e-5, train_loader_raw, test_loader_raw)
-plot_results(t_loss, v_loss, t_acc, v_acc, title="Raw Prices")
+# %% ############## MODEL TRAINING ################
+model_sched = StockCNN(8*L_out, k)
+t_loss, v_loss, t_acc, v_acc = train_model_with_scheduler(model_sched, 1e-3, train_loader_long_change, test_loader_long_change)
+plot_results(t_loss, v_loss, t_acc, v_acc, title=f"Raw Prices for {k} kernel size")
 # %%
