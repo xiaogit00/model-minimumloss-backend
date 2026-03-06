@@ -1,5 +1,6 @@
 {
     "model_name": "MNISTFashion Simple CNN",
+    "has_playground": false,
     "blog_link": "https://sampleBloglink.com",
     "tags": ["cnn", "mnist"]
 }

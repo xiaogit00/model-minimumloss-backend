@@ -28,6 +28,7 @@ def get_models() -> list:
             models[i].append(metadata['blog_link'])
             models[i].append(metadata['tags'])
         models[i].append(name)
+        models[i].append(metadata['has_playground'])
     return models
 
 def get_model_definition(model_slug) -> str:

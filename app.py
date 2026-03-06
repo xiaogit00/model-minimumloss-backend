@@ -1,18 +1,21 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from model import classifier
 import services.file_db as file_db
+import os
 import logging
 from pathlib import Path
-BASE_CODE_DIR = Path("./models/mnist_fashion")
-
+BASE_DIR = Path(__file__).parent
+img_dir = BASE_DIR / "models/1_MNISTFashion_shallowNN_18FEB26/images"
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 app = FastAPI(title="Image Classification API")
+
 router = APIRouter()
 
 # Configure CORS
@@ -27,7 +30,9 @@ app.add_middleware(
 @router.get("/")
 async def root():
     return {"message": "Image Classification API is running"}
-
+#------------------------------
+#          Base Routes
+#------------------------------
 @router.get("/models")
 async def models():
     res = file_db.get_models()
@@ -62,6 +67,26 @@ async def model(model_slug):
 async def model(model_slug):
     res = file_db.get_model_errors_chart(model_slug)
     return res
+
+#------------------------------
+#         Playground pages
+#------------------------------
+@router.get("/models/mnistfashion_test_images")
+async def get_mnistfashion_images():
+    files = os.listdir(img_dir)
+    return {"images": [f"/mnistfashion_test_images/{f}" for f in files if f.endswith((".jpg", ".png", ".webp"))]}
+
+# routes file
+@router.get("/debug/images")  # → accessible at /api/debug/images
+async def debug_images():
+    return {
+        "path": str(img_dir),
+        "exists": img_dir.exists(),
+        "files": os.listdir(img_dir) if img_dir.exists() else []
+    }
+#------------------------------
+#         Troubleshooting
+#------------------------------
 
 @router.get("/health")
 async def health_check():
@@ -121,6 +146,7 @@ async def predict_batch(files: list[UploadFile] = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 app.include_router(router, prefix="/api")
+app.mount("/mnistfashion_test_images", StaticFiles(directory=img_dir), name="images")
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

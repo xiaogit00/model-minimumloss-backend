@@ -1,5 +1,6 @@
 {
     "model_name": "SNP500 (SPY) Price prediction CNN",
+    "has_playground": false,
     "blog_link": "https://blog.minimumloss.xyz/posts/sanity-checking-the-results-of-my-cnn-stock-price-predictor/",
     "tags": ["cnn", "SPY"]
 }

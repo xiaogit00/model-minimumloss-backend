@@ -1,6 +1,7 @@
 {
     "model_name": "Sample Model Name",
     "blog_link": "https://sampleBloglink.com",
+    "has_playground": false,
     "tags": ["cnn", "mnist"],
     "observations": "Slower start; marginally better accuracy."
 }

@@ -1,5 +1,6 @@
 {
     "model_name": "MNIST Fashion Shallow NN",
+    "has_playground": true,
     "blog_link": "https://blog.minimumloss.xyz/posts/what-i-learned-implementing-a-shallow-neural-network-for-fashionmnist/",
     "tags": ["cnn", "mnist"]
 }
