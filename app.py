@@ -146,7 +146,7 @@ async def predict_batch(files: list[UploadFile] = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 app.include_router(router, prefix="/api")
-app.mount("/mnistfashion_test_images", StaticFiles(directory=img_dir), name="images")
+app.mount("/api/mnistfashion_test_images", StaticFiles(directory=img_dir), name="images")
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
